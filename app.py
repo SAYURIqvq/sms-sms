@@ -12,45 +12,76 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-.main-title {
-    font-size: 44px;
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+.hero-title {
+    font-size: 46px;
     font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.3rem;
 }
-.card {
-    padding: 22px;
+
+.hero-subtitle {
+    font-size: 18px;
+    color: #b6beca;
+    margin-bottom: 2rem;
+}
+
+.info-card {
+    background: #1e293b;
+    border: 1px solid #334155;
     border-radius: 18px;
-    background-color: #1f2937;
-    margin-bottom: 16px;
+    padding: 24px;
+    margin-top: 8px;
 }
-.result-high {
-    padding: 18px;
-    border-radius: 14px;
-    background-color: #3b1117;
-    color: #ffb4b4;
-    font-weight: 700;
+
+.info-card p {
+    margin: 8px 0;
+    font-size: 16px;
 }
-.result-medium {
-    padding: 18px;
-    border-radius: 14px;
-    background-color: #3a2f12;
-    color: #ffe08a;
-    font-weight: 700;
+
+.small-note {
+    color: #94a3b8;
+    font-size: 14px;
 }
-.result-low {
-    padding: 18px;
-    border-radius: 14px;
+
+.result-box {
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 16px;
+    font-size: 17px;
+}
+
+.low {
     background-color: #12351f;
     color: #9ff2b2;
-    font-weight: 700;
+}
+
+.medium {
+    background-color: #3a2f12;
+    color: #ffe08a;
+}
+
+.high {
+    background-color: #3b1117;
+    color: #ffb4b4;
+}
+
+.footer-note {
+    color: #94a3b8;
+    font-size: 13px;
+    margin-top: 2rem;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">📩 SMS Phishing Detection System</div>', unsafe_allow_html=True)
-st.write("A BERT-based prototype for detecting legitimate, spam, and smishing SMS messages.")
 
 repo_id = os.environ["MODEL_REPO_ID"]
 token = os.environ["HUGGINGFACE_HUB_TOKEN"]
+
 
 @st.cache_resource
 def load_model():
@@ -58,6 +89,7 @@ def load_model():
     model = AutoModelForSequenceClassification.from_pretrained(repo_id, token=token)
     model.eval()
     return tokenizer, model
+
 
 tokenizer, model = load_model()
 
@@ -74,54 +106,106 @@ risk_map = {
 }
 
 advice_map = {
-    "Legitimate": "This message appears safe. No suspicious fraud pattern was detected.",
-    "Spam": "This message may contain promotional or unwanted content. Be cautious before responding.",
-    "Smishing": "This message may be a phishing attempt. Do not click links or share personal information."
+    "Legitimate": "This message looks normal based on the model prediction. Still, users should remain careful with unexpected links or requests.",
+    "Spam": "This message may be promotional or unwanted. Avoid replying if the sender is unknown.",
+    "Smishing": "This message may be a phishing attempt. Do not click the link, provide OTP codes, or share banking details."
 }
 
-col1, col2 = st.columns([1.1, 1])
+example_messages = {
+    "Legitimate example": "Hi Mom, I will arrive home around 7pm. Please do not wait for dinner.",
+    "Spam example": "Congratulations! You have been selected to receive a free vacation package. Reply YES now!",
+    "Smishing example": "Your package delivery failed. Pay RM2.99 redelivery fee here: http://track-parcel-secure.com"
+}
 
-with col1:
+if "sms_text" not in st.session_state:
+    st.session_state.sms_text = ""
+
+
+def set_example(example_name):
+    st.session_state.sms_text = example_messages[example_name]
+
+
+st.markdown(
+    '<div class="hero-title">📩 SMS Phishing Detection System</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="hero-subtitle">A BERT-based prototype for classifying SMS messages as legitimate, spam, or smishing.</div>',
+    unsafe_allow_html=True
+)
+
+left_col, right_col = st.columns([1.15, 0.85], gap="large")
+
+with left_col:
     st.subheader("Message Input")
+
     sms_text = st.text_area(
         "Enter SMS message:",
+        key="sms_text",
         height=160,
         placeholder="Example: Your bank account has been locked. Verify now using this link."
     )
 
-    st.caption("Try one of these examples:")
-    c1, c2, c3 = st.columns(3)
+    st.caption("Quick test examples")
 
-    if c1.button("Legitimate example"):
-        sms_text = "Hi Mom, I will arrive home around 7pm. Please do not wait for dinner."
-        st.rerun()
+    ex1, ex2, ex3 = st.columns(3)
 
-    if c2.button("Spam example"):
-        sms_text = "Congratulations! You have been selected to receive a free vacation package. Reply YES now!"
-        st.rerun()
+    with ex1:
+        st.button(
+            "Legitimate",
+            use_container_width=True,
+            on_click=set_example,
+            args=("Legitimate example",)
+        )
 
-    if c3.button("Smishing example"):
-        sms_text = "Your bank account has been suspended. Verify immediately at http://secure-bank-login.com"
-        st.rerun()
+    with ex2:
+        st.button(
+            "Spam",
+            use_container_width=True,
+            on_click=set_example,
+            args=("Spam example",)
+        )
 
-with col2:
-    st.subheader("System Overview")
+    with ex3:
+        st.button(
+            "Smishing",
+            use_container_width=True,
+            on_click=set_example,
+            args=("Smishing example",)
+        )
+
+    detect_button = st.button(
+        "Detect Message",
+        type="primary",
+        use_container_width=False
+    )
+
+with right_col:
+    st.subheader("Prototype Details")
+
     st.markdown("""
-    <div class="card">
-    <b>Model:</b> BERT-base<br>
-    <b>Task:</b> 3-class SMS classification<br>
-    <b>Classes:</b> Legitimate, Spam, Smishing<br>
-    <b>Deployment:</b> Streamlit Cloud + Hugging Face Hub
+    <div class="info-card">
+        <p><b>Selected model:</b> BERT-base</p>
+        <p><b>Deployment setup:</b> Streamlit Cloud + Hugging Face Hub</p>
+        <p><b>Input:</b> SMS text message</p>
+        <p><b>Output:</b> Message class, confidence score, risk level, and user advice</p>
     </div>
     """, unsafe_allow_html=True)
 
-if st.button("Detect Message", type="primary"):
+    st.markdown("""
+    <p class="small-note">
+    This prototype focuses on practical SMS fraud screening. The model output should be treated as a risk indicator, not as a final legal or security decision.
+    </p>
+    """, unsafe_allow_html=True)
 
-    if not sms_text.strip():
-        st.warning("Please enter an SMS message first.")
+
+if detect_button:
+    if not st.session_state.sms_text.strip():
+        st.warning("Please enter an SMS message before running detection.")
     else:
         inputs = tokenizer(
-            sms_text,
+            st.session_state.sms_text,
             return_tensors="pt",
             truncation=True,
             padding=True,
@@ -135,36 +219,61 @@ if st.button("Detect Message", type="primary"):
         pred = torch.argmax(probs).item()
 
         prediction = label_map[pred]
-        confidence = probs[pred].item()
+        confidence = float(probs[pred])
         risk = risk_map[prediction]
 
         st.divider()
         st.subheader("Detection Result")
 
-        r1, r2, r3 = st.columns(3)
-        r1.metric("Predicted Class", prediction)
-        r2.metric("Confidence Score", f"{confidence * 100:.2f}%")
-        r3.metric("Risk Level", risk)
+        c1, c2, c3 = st.columns(3)
+
+        c1.metric("Predicted Class", prediction)
+        c2.metric("Confidence Score", f"{confidence * 100:.2f}%")
+        c3.metric("Risk Level", risk)
 
         if prediction == "Smishing":
-            st.markdown(f'<div class="result-high">⚠️ {advice_map[prediction]}</div>', unsafe_allow_html=True)
+            box_class = "high"
+            icon = "⚠️"
         elif prediction == "Spam":
-            st.markdown(f'<div class="result-medium">⚠️ {advice_map[prediction]}</div>', unsafe_allow_html=True)
+            box_class = "medium"
+            icon = "⚠️"
         else:
-            st.markdown(f'<div class="result-low">✅ {advice_map[prediction]}</div>', unsafe_allow_html=True)
+            box_class = "low"
+            icon = "✅"
+
+        st.markdown(
+            f'<div class="result-box {box_class}"><b>{icon} Recommendation:</b><br>{advice_map[prediction]}</div>',
+            unsafe_allow_html=True
+        )
 
         prob_df = pd.DataFrame({
             "Class": ["Legitimate", "Spam", "Smishing"],
-            "Probability": [float(probs[0]), float(probs[1]), float(probs[2])]
+            "Probability": [
+                float(probs[0]),
+                float(probs[1]),
+                float(probs[2])
+            ]
         })
 
         st.subheader("Class Probability Distribution")
         st.bar_chart(prob_df.set_index("Class"))
 
-        st.subheader("User Safety Recommendation")
+        st.subheader("Risk Interpretation")
+
         if prediction == "Smishing":
-            st.write("Avoid clicking any link, do not provide OTP or banking details, and verify the sender through an official channel.")
+            st.write(
+                "The message shows patterns commonly associated with phishing, such as urgent account action, suspicious links, payment requests, or identity verification prompts."
+            )
         elif prediction == "Spam":
-            st.write("Avoid replying to promotional messages from unknown senders and do not share personal information.")
+            st.write(
+                "The message appears more like unwanted promotional content. It may not be directly malicious, but the user should still avoid interacting with unknown senders."
+            )
         else:
-            st.write("The message appears normal, but users should still verify unexpected links or requests.")
+            st.write(
+                "The message does not show strong phishing or spam patterns. However, users should still verify unexpected messages, especially if they contain links or sensitive requests."
+            )
+
+st.markdown(
+    '<div class="footer-note">Prototype developed for SMS phishing and spam detection using a fine-tuned BERT model.</div>',
+    unsafe_allow_html=True
+)
