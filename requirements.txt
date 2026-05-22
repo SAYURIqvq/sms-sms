@@ -1,5 +1,9 @@
 streamlit
 torch
+torchvision
 transformers
-sentencepiece
+huggingface_hub
 safetensors
+pandas
+numpy
+scikit-learn
