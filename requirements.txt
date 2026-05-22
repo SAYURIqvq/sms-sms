@@ -7,3 +7,9 @@ safetensors
 pandas
 numpy
 scikit-learn
+streamlit
+torch
+transformers
+sentencepiece
+safetensors
+pandas
