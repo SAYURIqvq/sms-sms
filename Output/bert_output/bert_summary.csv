@@ -1,0 +1,11 @@
+Metric,Value
+Model,bert-base-uncased
+Total parameters,"109,484,547"
+Max sequence length,128
+Batch size,32
+Epochs trained,3
+Best Val Macro F1,0.9525
+MCC,0.9561
+Mean inference latency (ms),21.32
+P95  inference latency (ms),25.78
+Throughput (samples/s),46.9

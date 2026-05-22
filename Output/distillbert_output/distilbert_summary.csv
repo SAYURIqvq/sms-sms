@@ -1,0 +1,11 @@
+Metric,Value
+Model,distilbert-base-uncased
+Total parameters,"66,955,779"
+Max sequence length,128
+Batch size,32
+Epochs trained,5
+Best Val Macro F1,0.9327
+MCC,0.9383
+Mean inference latency (ms),21.08
+P95  inference latency (ms),23.54
+Throughput (samples/s),47.4

@@ -1,0 +1,16 @@
+{
+  "huggingface": {
+    "models": {
+      "bert": {
+        "repo_id": "HuiLing990511/sms-phishing-bert",
+        "token": "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",
+        "uploaded_by": "Hui Ling"
+      },
+      "distilbert": {
+        "repo_id": "siaoshuen/sms-phishing-distilbert",
+        "token": "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",
+        "uploaded_by": "Siao Shuen"
+      }
+    }
+  }
+}

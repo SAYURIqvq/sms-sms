@@ -1,0 +1,2 @@
+model,mean_lat_ms,p95_lat_ms,throughput,macro_f1,mcc
+distilbert-base-uncased,21.079,23.543,47.44,0.9327,0.9383

@@ -1,0 +1,2 @@
+model,mean_lat_ms,p95_lat_ms,throughput,macro_f1,mcc
+bert-base-uncased,21.323,25.777,46.9,0.9525,0.9561
